@@ -375,7 +375,9 @@ import axios from 'axios'
             this.email_error = false;
             this.resetValues()
           }
-        });
+          this.initialize()
+        }
+      );
       },
 
       resetValues(){
