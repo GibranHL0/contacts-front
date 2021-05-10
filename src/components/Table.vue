@@ -30,7 +30,7 @@
             >
               Add A New Contact
         </v-btn>
-        <v-dialog v-model="dialog" max-width="500px">
+        <v-dialog persistent v-model="dialog" max-width="500px">
           <v-card>
             <v-card-title>
               <span class="headline">{{ formTitle }}</span>
@@ -47,6 +47,8 @@
                       v-model="editedItem.email"
                       label="Email"
                     ></v-text-field>
+                    <label v-if="email_error" class="font-light text-red-600">Email Already Exists</label>
+                    <label v-if="email_format" class="font-light text-red-600">Invalid Email</label>
                   </v-col>
                   <v-col
                     cols="12"
@@ -57,6 +59,7 @@
                       v-model="editedItem.name"
                       label="Name"
                     ></v-text-field>
+                    <label v-if="name_error" class="font-light text-red-600">Invalid Name</label>
                   </v-col>
                   <v-col
                     cols="12"
@@ -67,6 +70,7 @@
                       v-model="editedItem.last_name"
                       label="Last Name"
                     ></v-text-field>
+                    <label v-if="last_name_error" class="font-light text-red-600">Invalid Last Name</label>
                   </v-col>
                   <v-col
                     cols="12"
@@ -86,6 +90,7 @@
                     <v-text-field
                       v-model="editedItem.phone"
                       label="Phone"
+                      type="number" 
                     ></v-text-field>
                   </v-col>
                 </v-row>
@@ -104,6 +109,7 @@
               <v-btn
                 color="blue darken-1"
                 text
+                type="button"
                 @click="save"
               >
                 Save
@@ -154,26 +160,26 @@
                                 Name *
                             </label>
                             <label v-if="name_error" class="font-light text-red-600">Invalid Name</label>
-                            <input class="py-2 px-3 text-gray-900 md:mr-2" type="text" v-model="name" maxlength="40" pattern="[a-zA-Z]*" required>
+                            <v-text-field v-model="name" required class="pr-1"></v-text-field>
                         </div>
                         <div class="flex flex-col mb-4 md:w-1/2">
                             <label class="font-medium text-lg text-gray-900 mb-2 md:ml-2" for="last_name">
                                 Last Name *
                             </label>
                             <label v-if="last_name_error" class="font-light text-red-600">Invalid Last Name</label>
-                            <input class="border py-2 px-3 text-gray-900 md:ml-2" type="text" v-model="last_name" maxlength="40" pattern="[a-zA-Z]*" required>
+                            <v-text-field v-model="last_name" required class="pl-1"></v-text-field>
                         </div>
                         <div class="flex flex-col mb-4 md:w-full">
                             <label class="font-medium text-lg text-gray-900 mb-2" for="company">
                                 Company
                             </label>
-                            <input class="border py-2 px-3 text-gray-900" type="text" v-model="company" maxlength="40">
+                            <v-text-field v-model="company"></v-text-field>
                         </div>
                         <div class="flex flex-col mb-4 md:w-full">
                             <label class="font-medium text-lg text-gray-900 mb-2" for="phone">
                                 Phone
                             </label>
-                            <input class="border py-2 px-3 text-gray-900" type="number" v-model="phone" max="1000000000000000000000">
+                            <v-text-field v-model="phone" type="number"></v-text-field>
                         </div>
                         <div class="flex flex-col mb-4 md:w-full">
                             <label class="font-medium text-lg text-gray-900 mb-2" for="email">
@@ -181,7 +187,7 @@
                             </label>
                             <label v-if="email_error" class="font-light text-red-600">Email Already Exists</label>
                             <label v-if="email_format" class="font-light text-red-600">Invalid Email</label>
-                            <input class="border py-2 px-3 text-gray-900" type="email" maxlength="40" v-model="email" required>
+                            <v-text-field v-model="email" type="email" required></v-text-field>
                             <p class="text-sm py-4">* Required</p>
                         </div>
                         <button class="bg-black hover:bg-red-400 mx-auto text-white px-2 py-2 rounded-md" type="button" @click="sendInfo()">
@@ -299,6 +305,7 @@ import axios from 'axios'
       },
 
       close () {
+        this.resetValidation()
         this.dialog = false
         this.$nextTick(() => {
           this.editedItem = Object.assign({}, this.defaultItem)
@@ -315,14 +322,7 @@ import axios from 'axios'
       },
 
       save () {
-        if (this.editedIndex > -1) {
-          Object.assign(this.contacts[this.editedIndex], this.editedItem)
-        } else {
-          this.contacts.push(this.editedItem)
-        }
-        var edited_contact = this.contacts[this.editedIndex]
-        this.modifyInfo(edited_contact)
-        this.close()
+        this.modifyInfo(this.editedItem)
       },
 
       check(){
@@ -364,7 +364,6 @@ import axios from 'axios'
             }
             this.contacts.push(new_contact)
             this.toggleModal = false;
-            this.email_error = false;
             this.resetValues()
           }
           this.initialize()
@@ -394,6 +393,31 @@ import axios from 'axios'
             last_name: contact.last_name,
             company: contact.company, 
             phone: contact.phone
+          })
+          .then(response => {
+            if (response.data.msg == "Email already exists"){
+              this.email_error = true;
+            }
+            else if(response.data.msg == "Email is not valid"){
+              this.email_format = true
+            }
+            else if(response.data.msg == "Name is not valid"){
+              console.log("Here detects error")
+              this.name_error = true
+              console.log("Name error after detection: " + this.name_error)
+            }
+            else if(response.data.msg == "Last Name is not valid"){
+              this.last_name_error = true
+            }
+            else{
+              this.resetValidation()
+              if (this.editedIndex > -1) {
+              Object.assign(this.contacts[this.editedIndex], this.editedItem)
+              } else {
+                this.contacts.push(this.editedItem)
+              }
+              this.close()
+            }
           })
       },
 
