@@ -277,7 +277,7 @@ import axios from 'axios'
 
     methods: {
       initialize () {
-        axios.get("https://contacts-api-gibran-academy.herokuapp.com/contacts")
+        axios.get("https://go-contact-api.herokuapp.com/contacts")
       .then(
         (response) => {
             this.contacts = response.data
@@ -334,7 +334,7 @@ import axios from 'axios'
 
       sendInfo(){
         this.resetValidation()
-        axios.post("https://contacts-api-gibran-academy.herokuapp.com/contacts", {
+        axios.post("https://go-contact-api.herokuapp.com/contacts", {
           email: this.email,
           name: this.name,
           last_name: this.last_name,
@@ -387,7 +387,7 @@ import axios from 'axios'
       },
 
       modifyInfo(contact){
-          axios.put("https://contacts-api-gibran-academy.herokuapp.com/contacts", {
+          axios.put("https://go-contact-api.herokuapp.com/contacts", {
             email: contact.email,
             name: contact.name,
             last_name: contact.last_name,
@@ -422,7 +422,7 @@ import axios from 'axios'
       },
 
       deleteInfo(contact){
-          var uri = "https://contacts-api-gibran-academy.herokuapp.com/contacts/" + contact.email
+          var uri = "https://go-contact-api.herokuapp.com/contacts/" + contact.email
           axios.delete(uri);
       }
     },
